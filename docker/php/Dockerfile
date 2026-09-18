@@ -22,6 +22,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/php.ini
+
 WORKDIR /var/www/html
 
 # Install production Composer dependencies.

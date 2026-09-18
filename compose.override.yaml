@@ -1,0 +1,12 @@
+services:
+  app:
+    volumes:
+      - .:/var/www/html
+
+  queue:
+    volumes:
+      - .:/var/www/html
+
+  scheduler:
+    volumes:
+      - .:/var/www/html
