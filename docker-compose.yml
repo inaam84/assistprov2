@@ -111,7 +111,7 @@ services:
 
     working_dir: /var/www/html
 
-    command: sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    command: php artisan schedule:work
 
     env_file:
       - .env
