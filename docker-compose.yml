@@ -81,6 +81,8 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
 
+    user: "www-data"
+    
     restart: unless-stopped
 
     working_dir: /var/www/html
@@ -107,6 +109,8 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
 
+    user: "www-data"
+    
     restart: unless-stopped
 
     working_dir: /var/www/html
