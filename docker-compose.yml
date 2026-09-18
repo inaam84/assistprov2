@@ -11,6 +11,8 @@ services:
 
     env_file:
       - .env
+    environment:
+      DB_ROOT_PASSWORD: ""
 
     depends_on:
       mysql:
@@ -87,6 +89,8 @@ services:
 
     env_file:
       - .env
+    environment:
+      DB_ROOT_PASSWORD: ""  
 
     depends_on:
       mysql:
@@ -111,6 +115,8 @@ services:
 
     env_file:
       - .env
+    environment:
+      DB_ROOT_PASSWORD: ""  
 
     depends_on:
       mysql:

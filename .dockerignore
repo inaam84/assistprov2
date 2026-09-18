@@ -13,3 +13,7 @@ storage/framework/sessions/*
 storage/framework/views/*
 
 docker-compose*.yml
+
+.github
+.env.*
+bootstrap/cache/*.php
