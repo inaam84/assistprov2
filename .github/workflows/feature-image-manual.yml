@@ -153,21 +153,21 @@ jobs:
             ELAPSED=$((CURRENT_TIME - START_TIME))
 
             if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
-              echo "No response received within 10 minutes."
-              echo "Feature image will not be published."
-              exit 0
+                echo "No response received within 10 minutes."
+                echo "Feature image will not be published."
+                exit 0
             fi
 
-            COMMENTS=$(gh issue view "$ISSUE_URL" --comments --json comments)
+            COMMENTS=$(gh issue view "$ISSUE_URL" --json comments)
 
             if echo "$COMMENTS" | grep -q '"/publish"'; then
-              echo "Publish request received."
-              exit 0
+                echo "Publish request received."
+                exit 0
             fi
 
             if echo "$COMMENTS" | grep -q '"/cancel"'; then
-              echo "Publish cancelled."
-              exit 0
+                echo "Publish cancelled."
+                exit 0
             fi
 
             echo "No decision yet. Waiting 15 seconds..."
