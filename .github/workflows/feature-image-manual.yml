@@ -136,7 +136,7 @@ jobs:
 
           to cancel the request.
 
-          ⏱️ This request will expire after 10 minutes.")
+          ⏱️ This request will expire after 10 minutes."
 
           echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
 
@@ -183,3 +183,28 @@ jobs:
             echo "No decision yet. Waiting 15 seconds..."
             sleep 15
           done
+
+  publish-image:
+    needs: create-publish-request
+    if: needs.create-publish-request.outputs.decision == 'publish'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: assistpro-image
+
+      - name: Load Docker image
+        run: docker load --input assistpro-image.tar
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:feature-${{ github.sha }}
