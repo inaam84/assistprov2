@@ -73,5 +73,21 @@ jobs:
       - name: Run Laravel tests
         run: php artisan test
 
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker image
-        run: docker build --file docker/php/Dockerfile --tag assistprov2:ci .
+        run: |
+          docker build \
+            --file docker/php/Dockerfile \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:latest \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:sha-${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:sha-${{ github.sha }}
