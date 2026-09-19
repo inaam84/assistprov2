@@ -1,0 +1,134 @@
+name: Feature Image - Manual Publish
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: laravel
+          MYSQL_USER: laravel
+          MYSQL_PASSWORD: laravel
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+          --health-start-period=30s
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: laravel
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, bcmath, redis, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare Laravel application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: Run Laravel tests
+        run: php artisan test
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --file docker/php/Dockerfile \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:feature-${{ github.sha }} \
+            .
+
+      - name: Save Docker image
+        run: |
+          docker save \
+            ${{ secrets.DOCKERHUB_USERNAME }}/assistpro:feature-${{ github.sha }} \
+            --output assistpro-image.tar
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistpro-image
+          path: assistpro-image.tar
+          retention-days: 1
+
+  create-publish-request:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create publish request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "🚀 Publish feature image: ${{ github.ref_name }}" \
+            --body "## Feature image publish request
+
+          **Branch:** \`${{ github.ref_name }}\`
+
+          **Commit:** \`${{ github.sha }}\`
+
+          **Docker image:**
+          \`${{ secrets.DOCKERHUB_USERNAME }}/assistpro:feature-${{ github.sha }}\`
+
+          ---
+
+          Reply with:
+
+          \`/publish\`
+
+          to publish the image.
+
+          Or:
+
+          \`/cancel\`
+
+          to cancel the request.
+
+          ⏱️ This request will expire after 10 minutes.
+
+          > This is currently only the request stage. The workflow will not publish the image yet."
